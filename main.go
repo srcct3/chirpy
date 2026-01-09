@@ -10,6 +10,7 @@ func main() {
 	port := "8080"
 
 	mux.Handle("/app/", http.StripPrefix("/app", http.FileServer(http.Dir("."))))
+	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
