@@ -1,21 +1,48 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
+	"os"
 	"sync/atomic"
+
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
+
+	"github.com/srcct3/chirpy/internal/database"
 )
 
 type apiConfig struct {
-	hit atomic.Int32
+	fileserveHit atomic.Int32
+	db           *database.Queries
+	paltform     string
 }
 
 func main() {
+	godotenv.Load()
 	mux := http.NewServeMux()
 	port := "8080"
 
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL must be set")
+	}
+	platform := os.Getenv("PLATFORM")
+	if platform == "" {
+		log.Fatal("PLATFORM must be set")
+	}
+
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Printf("Error failed to open database: %s", err)
+		return
+	}
+
 	apiCfg := apiConfig{
-		hit: atomic.Int32{},
+		fileserveHit: atomic.Int32{},
+		db:           database.New(db),
+		paltform:     platform,
 	}
 
 	fs := http.StripPrefix("/app", http.FileServer(http.Dir(".")))
@@ -27,6 +54,7 @@ func main() {
 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 	mux.HandleFunc("POST /api/validate_chirp", handlerValidateChirp)
+	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersCreate)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

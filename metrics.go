@@ -7,7 +7,7 @@ import (
 
 func (cfg *apiConfig) middlewareFileserveMetrics(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cfg.hit.Add(1)
+		cfg.fileserveHit.Add(1)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -15,5 +15,5 @@ func (cfg *apiConfig) middlewareFileserveMetrics(next http.Handler) http.Handler
 func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/palin; charset=utf-8")
-	fmt.Fprintf(w, "file server hit: %d", cfg.hit.Load())
+	fmt.Fprintf(w, "file server hit: %d", cfg.fileserveHit.Load())
 }
