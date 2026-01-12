@@ -30,15 +30,15 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 		Chirp
 	}
 
-	param := parameter{}
+	params := parameter{}
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&param)
+	err := decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to decode json", err)
 		return
 	}
 
-	cleaned, err := validateChirp(param.Body)
+	cleaned, err := validateChirp(params.Body)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error(), err)
 		return
@@ -46,7 +46,7 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 
 	dbChirp, err := cfg.db.CreateChirp(r.Context(), database.CreateChirpParams{
 		Body:   cleaned,
-		UserID: param.UserID,
+		UserID: params.UserID,
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to create chirp", err)
