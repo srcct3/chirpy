@@ -17,6 +17,7 @@ type apiConfig struct {
 	fileserveHit atomic.Int32
 	db           *database.Queries
 	paltform     string
+	jwtSecret    string
 }
 
 func main() {
@@ -33,6 +34,11 @@ func main() {
 		log.Fatal("PLATFORM must be set")
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET must be set")
+	}
+
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Printf("Error failed to open database: %s", err)
@@ -43,6 +49,7 @@ func main() {
 		fileserveHit: atomic.Int32{},
 		db:           database.New(db),
 		paltform:     platform,
+		jwtSecret:    jwtSecret,
 	}
 
 	fs := http.StripPrefix("/app", http.FileServer(http.Dir(".")))
