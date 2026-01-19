@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,6 +17,15 @@ import (
 const TokenAccessType = "chirpy"
 
 var ErrNoAuthHeaderIncluded = errors.New("no auth header included in request")
+
+func MakeRefreshToken() (string, error) {
+	src := make([]byte, 32)
+	_, err := rand.Read(src)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(src), nil
+}
 
 func GetBearerToken(header http.Header) (string, error) {
 	authHeader := header.Get("Authorization")
