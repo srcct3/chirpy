@@ -18,7 +18,8 @@ INSERT INTO
         created_at,
         updated_at,
         email,
-        hashed_password
+        hashed_password,
+        is_chirpy_red
     )
 VALUES
     (
@@ -26,10 +27,11 @@ VALUES
         NOW(),
         NOW(),
         $1,
-        $2
+        $2,
+        FALSE
     )
 RETURNING
-    id, created_at, updated_at, email, hashed_password
+    id, created_at, updated_at, email, hashed_password, is_chirpy_red
 `
 
 type CreateUserParams struct {
@@ -46,13 +48,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.Email,
 		&i.HashedPassword,
+		&i.IsChirpyRed,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT
-    id, created_at, updated_at, email, hashed_password
+    id, created_at, updated_at, email, hashed_password, is_chirpy_red
 FROM
     users
 WHERE
@@ -68,6 +71,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.UpdatedAt,
 		&i.Email,
 		&i.HashedPassword,
+		&i.IsChirpyRed,
 	)
 	return i, err
 }
@@ -82,7 +86,7 @@ SET
 WHERE
     id = $1
 RETURNING
-    id, created_at, updated_at, email, hashed_password
+    id, created_at, updated_at, email, hashed_password, is_chirpy_red
 `
 
 type UpdateUserParams struct {
@@ -100,6 +104,38 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.Email,
 		&i.HashedPassword,
+		&i.IsChirpyRed,
+	)
+	return i, err
+}
+
+const updateUserSubscription = `-- name: UpdateUserSubscription :one
+UPDATE
+    users
+SET
+    is_chirpy_red = $2,
+    updated_at = NOW()
+WHERE
+    id = $1
+RETURNING
+    id, created_at, updated_at, email, hashed_password, is_chirpy_red
+`
+
+type UpdateUserSubscriptionParams struct {
+	ID          uuid.UUID
+	IsChirpyRed bool
+}
+
+func (q *Queries) UpdateUserSubscription(ctx context.Context, arg UpdateUserSubscriptionParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUserSubscription, arg.ID, arg.IsChirpyRed)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.HashedPassword,
+		&i.IsChirpyRed,
 	)
 	return i, err
 }

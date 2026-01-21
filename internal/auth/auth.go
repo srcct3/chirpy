@@ -27,17 +27,25 @@ func MakeRefreshToken() (string, error) {
 	return hex.EncodeToString(src), nil
 }
 
-func GetBearerToken(header http.Header) (string, error) {
+func getHeaderAuth(header http.Header, tokenType string) (string, error) {
 	authHeader := header.Get("Authorization")
 	if authHeader == "" {
 		return "", ErrNoAuthHeaderIncluded
 	}
 
 	splitAuth := strings.Split(authHeader, " ")
-	if len(splitAuth) < 2 || splitAuth[0] != "Bearer" {
+	if len(splitAuth) < 2 || splitAuth[0] != tokenType {
 		return "", errors.New("malformed authorization header")
 	}
 	return splitAuth[1], nil
+}
+
+func GetApiKey(header http.Header) (string, error) {
+	return getHeaderAuth(header, "ApiKey")
+}
+
+func GetBearerToken(header http.Header) (string, error) {
+	return getHeaderAuth(header, "Bearer")
 }
 
 func MakeJWT(userID uuid.UUID, tokenSecret string, expiersIn time.Duration) (string, error) {

@@ -18,6 +18,7 @@ type apiConfig struct {
 	db           *database.Queries
 	paltform     string
 	jwtSecret    string
+	polkaApi     string
 }
 
 func main() {
@@ -39,6 +40,11 @@ func main() {
 		log.Fatal("JWT_SECRET must be set")
 	}
 
+	polkaApi := os.Getenv("POLKA_KEY")
+	if polkaApi == "" {
+		log.Fatal("POLKA_KEY must be set")
+	}
+
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Printf("Error failed to open database: %s", err)
@@ -50,6 +56,7 @@ func main() {
 		db:           database.New(db),
 		paltform:     platform,
 		jwtSecret:    jwtSecret,
+		polkaApi:     polkaApi,
 	}
 
 	fs := http.StripPrefix("/app", http.FileServer(http.Dir(".")))
@@ -66,6 +73,7 @@ func main() {
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerTokenRefresh)
 	mux.HandleFunc("POST /api/revoke", apiCfg.handlerTokenRevoke)
 	mux.HandleFunc("POST /api/chirps", apiCfg.handlerChirpsCreate)
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.handlerUsersUpdateSubscription)
 	mux.HandleFunc("GET /api/chirps", apiCfg.handlerChirpsRetrieve)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handlerChirpsGet)
 	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.handlerChirpsDelete)

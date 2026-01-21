@@ -5,7 +5,8 @@ INSERT INTO
         created_at,
         updated_at,
         email,
-        hashed_password
+        hashed_password,
+        is_chirpy_red
     )
 VALUES
     (
@@ -13,7 +14,8 @@ VALUES
         NOW(),
         NOW(),
         $1,
-        $2
+        $2,
+        FALSE
     )
 RETURNING
     *;
@@ -32,6 +34,17 @@ UPDATE
 SET
     email = $2,
     hashed_password = $3,
+    updated_at = NOW()
+WHERE
+    id = $1
+RETURNING
+    *;
+
+-- name: UpdateUserSubscription :one
+UPDATE
+    users
+SET
+    is_chirpy_red = $2,
     updated_at = NOW()
 WHERE
     id = $1
